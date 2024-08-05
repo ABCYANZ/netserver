@@ -20,7 +20,7 @@ private:
     int timeout_;
     std::thread::id threadid_;
     std::mutex mu_;
-    std::queue<std::function<void(std::string)>> task_;
+    std::queue<std::function<void()>> task_;
     int efd_;
     std::unique_ptr<channel>efdch_;
 public:
@@ -34,6 +34,6 @@ public:
     void UpdateChannel(channel* ch);  // 确保 channel 类型被正确声明
 
     void AddConnection(spConnection conn);
-
-    void Addtask(std::function<void(std::string)> task);
+    void TaskSend();
+    void Addtask(std::function<void()> task);
 };
