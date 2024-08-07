@@ -1,4 +1,7 @@
-all:client server1 
+all:client client1 server1 
+
+client1:client1.cpp 
+	g++ -g -o client1 client1.cpp
 
 client:client.cpp 
 	g++ -g -o client client.cpp

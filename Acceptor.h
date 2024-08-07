@@ -10,7 +10,7 @@ class Acceptor
 private:
     Eventloop *loop_;
     std::unique_ptr<Socket>sockfd_;
-    std::unique_ptr<channel>ch_;    
+    std::shared_ptr<channel>ch_;    
     std::function<void (std::unique_ptr<Socket>)> ConnectionManage_; 
 
 public:
@@ -19,6 +19,6 @@ public:
     ~Acceptor();
     
     void newConnection();
-
+    bool chbool();
     void SetConnectionManage(std::function<void(std::unique_ptr<Socket>)> ConnectionManage);
 };

@@ -2,8 +2,9 @@
 #include"Eventloop.h"
 #include"Socket.h"
 #include<functional>
+#include <memory>
 class Eventloop;
-class channel
+class channel:public std::enable_shared_from_this<channel>
 {
 private:
     Eventloop *loop_;
@@ -26,6 +27,7 @@ public:
     bool inepoll();
 
     void SetEvents(uint32_t events);
+    void SetrEvents(uint32_t revents);
     void SetInepoll(bool include);
     void Handleevent();
 

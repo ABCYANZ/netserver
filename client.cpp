@@ -25,16 +25,18 @@ int main() {
         close(client_socket);
         return -1;
     }
-
+    //close(client_socket);
     const char* message = "Hello, Server!";
     if (send(client_socket, message, strlen(message), 0) < 0) {
         std::cerr << "Send failed" << std::endl;
         close(client_socket);
         return -1;
     }
-
+    //close(client_socket);
     char buffer[1024] = {0};
+    //close(client_socket);
     ssize_t bytes_received = recv(client_socket, buffer, 1023, 0);
+    close(client_socket);
     if (bytes_received <= 0) {
         std::cerr << "Receive failed" << std::endl;
     } else {

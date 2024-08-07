@@ -2,7 +2,7 @@
 #include <sys/epoll.h>
 #include<vector>
 #include"channel.h"
-
+#include <memory>
 class channel;
 class Epoll
 {
@@ -14,8 +14,8 @@ public:
     Epoll();
     ~Epoll();
 
-    std::vector<channel *>loop();
+    std::vector<std::weak_ptr<channel>> loop();
 
-    void UpdateChannel(channel *ch);
+    void UpdateChannel(const std::shared_ptr<channel> &ch);
 
 };

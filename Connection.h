@@ -15,7 +15,7 @@ using spConnection=std::shared_ptr<Connection>;
 class Connection: public std::enable_shared_from_this<Connection>
 {
 private:
-    std::unique_ptr<channel>ch_;
+    std::shared_ptr<channel>ch_;
     Eventloop*loop_;
     Buffer rbuff_;
     Buffer wbuff_;

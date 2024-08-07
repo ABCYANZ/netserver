@@ -44,6 +44,7 @@ void Connection::onmessage()
         else if(bytes_read==0)
         {
             closecallback_(shared_from_this());
+            break;
         }
   
     }       
@@ -95,7 +96,9 @@ void Connection::setclosecallback(std::function<void(spConnection)> closecallbac
 }
 void Connection::CloseConnection()
 {
+    std::cout<<"9\n";
     closecallback_(shared_from_this());
+    std::cout<<"8\n";
 }
 
 void Connection::setonmessagcallback(std::function<void(spConnection,std::string)> onmessagcallback)

@@ -6,8 +6,9 @@ Tcpserver::Tcpserver(const std::string&ip,uint16_t port,int threadsize):sockfd_(
     sockfd_->SetConnectionManage(std::bind(&Tcpserver::AddConnetion,this, std::placeholders::_1));
     for(int i=0;i<threadsize;i++)
     {
-        loops_.emplace_back(new Eventloop(10));
+        loops_.emplace_back(new Eventloop());
         ThreadPools_.AddTask(std::bind(&Eventloop::run,loops_[i].get()));
+        loops_[i]->setclosecallback(std::bind(&Tcpserver::CloseConnection,this, std::placeholders::_1));
     }
 }
 Tcpserver::~Tcpserver()
@@ -22,7 +23,6 @@ void Tcpserver::start()
 }
 void Tcpserver::AddConnetion(std::unique_ptr<Socket> clientfd)
 {
-    
     int fd = clientfd->fd();
     spConnection con(new Connection(loops_[fd%loops_.size()].get(), move(clientfd)));
     
@@ -37,12 +37,15 @@ void Tcpserver::AddConnetion(std::unique_ptr<Socket> clientfd)
     
 }
 
-void Tcpserver::CloseConnection(spConnection clientfd)
+int Tcpserver::CloseConnection(spConnection clientfd)
 {
+    std::unique_lock connmu(mu_);
     conn_.erase(clientfd->fd());
     if(closecallback_)
     closecallback_(clientfd);
+    return loops_[clientfd->fd()%loops_.size()]->CloseConnection(clientfd);
     //delete clientfd;
+    
 }
 void Tcpserver::onmessage(spConnection clientfd,std::string buff)
 {

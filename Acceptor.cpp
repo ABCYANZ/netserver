@@ -2,7 +2,6 @@
 
 Acceptor::Acceptor(Eventloop *loop, const std::string&ip, uint16_t port):loop_(loop),sockfd_(new Socket(Nonblocking())),ch_(new channel(loop_,sockfd_->fd()))
 {
-   
     NetAddress addr(ip.c_str(),port);
     sockfd_->setreuseport(true);
     sockfd_->setkeepalive(true);
@@ -37,4 +36,8 @@ void Acceptor::newConnection()
 void Acceptor::SetConnectionManage(std::function<void(std::unique_ptr<Socket>)> ConnectionManage)
 {
     ConnectionManage_=ConnectionManage;
+}
+bool Acceptor::chbool()
+{
+    return ch_.use_count();
 }

@@ -13,6 +13,7 @@ private:
     ThreadPools ThreadPools_;
     std::vector<std::unique_ptr<Eventloop>> loops_;
     std::unique_ptr<Acceptor> sockfd_;
+    std::mutex mu_;
     std::map<int,spConnection> conn_;
     
     std::function<void(spConnection,std::string)> readcallback_;
@@ -28,7 +29,7 @@ public:
 
     void AddConnetion(std::unique_ptr<Socket> clientfd);
 
-    void CloseConnection(spConnection clientfd);
+    int CloseConnection(spConnection clientfd);
     void onmessage(spConnection clientfd,std::string buff);
     void WriteCallbac(spConnection clientfd);
     void ErrorConnection(spConnection clientfd);

@@ -25,7 +25,7 @@ int main() {
         close(client_socket);
         return -1;
     }
-
+    
     const char* message = "Hello, Server!";
     if (send(client_socket, message, strlen(message), 0) < 0) {
         std::cerr << "Send failed" << std::endl;
@@ -40,7 +40,7 @@ int main() {
     } else {
         std::cout << "Received: " << std::string(buffer, bytes_received) << std::endl;
     }
-    
+   sleep(2); 
     close(client_socket);
     return 0;
 }
