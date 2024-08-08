@@ -37,7 +37,3 @@ void Acceptor::SetConnectionManage(std::function<void(std::unique_ptr<Socket>)> 
 {
     ConnectionManage_=ConnectionManage;
 }
-bool Acceptor::chbool()
-{
-    return ch_.use_count();
-}

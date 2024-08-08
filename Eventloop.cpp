@@ -51,7 +51,14 @@ void Eventloop::run()
         ev = std::move(ep_->loop());
         for(auto &a:ev)
         {
+            
             if(a.expired())continue;
+ 
+            if(a.lock()->fd()==efd_)
+            {
+                TaskSend();continue;
+            }
+
             a.lock()->Handleevent();
         }
     }

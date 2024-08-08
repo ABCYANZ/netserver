@@ -9,14 +9,14 @@
 class Tcpserver
 {
 private:
-    std::unique_ptr<Eventloop> loop_;
-    ThreadPools ThreadPools_;
-    std::vector<std::unique_ptr<Eventloop>> loops_;
+    std::unique_ptr<Eventloop> loop_;//主事件循环,负责服务端监听的socket
+    ThreadPools ThreadPools_;//线程池,运行从事件循环
+    std::vector<std::unique_ptr<Eventloop>> loops_;//从事件循环,负责客户端的socket
     std::unique_ptr<Acceptor> sockfd_;
-    std::mutex mu_;
-    std::map<int,spConnection> conn_;
+    std::mutex mu_;//保护conn_
+    std::map<int,spConnection> conn_;//已经链接上来的客户端
     
-    std::function<void(spConnection,std::string)> readcallback_;
+    std::function<void(spConnection,std::string)> readcallback_;//回调上层类的函数,比如echserver,没有就不回调
     std::function<void(spConnection)> newConnetioncallback_;
     std::function<void(spConnection)> closecallback_; 
     std::function<void(spConnection)> sendcallback_; 
@@ -29,12 +29,12 @@ public:
     void stop();
     
 
-    void AddConnetion(std::unique_ptr<Socket> clientfd);
+    void AddConnetion(std::unique_ptr<Socket> clientfd);//在Acceptor中回调
 
-    int CloseConnection(spConnection clientfd);
-    void onmessage(spConnection clientfd,std::string buff);
-    void WriteCallbac(spConnection clientfd);
-    void ErrorConnection(spConnection clientfd);
+    int CloseConnection(spConnection clientfd);//在Connection中回调
+    void onmessage(spConnection clientfd,std::string buff);//在Connection中回调
+    void WriteCallbac(spConnection clientfd);//在Connection中回调
+    void ErrorConnection(spConnection clientfd);//在Connection中回调
     
 
     void setEchoClose(std::function<void(spConnection)> closecallback);

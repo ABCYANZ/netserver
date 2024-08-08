@@ -5,7 +5,6 @@ Connection::Connection(Eventloop*loop,std::unique_ptr<Socket>clientfd)
     loop_=loop;
     ch_=move(std::unique_ptr<channel>(new channel(loop,clientfd->fd())));
     clientfd_=(move(clientfd));
-    if(loop_)
     
     ch_->Edge();
     ch_->SetReadConnect(std::bind(&Connection::onmessage,this));
