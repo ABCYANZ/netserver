@@ -9,15 +9,43 @@
 //#include <vector>
 //#include"Eventloop.h"
 #include"EchoServer.h"
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+EchoServer *loop;
 
+void stop(int sig)
+{
+    printf("stop\n");
+    loop->Stop();
+    exit(0);
+}
 int main(int argc,char*argv[]) {
 
-    //Epoll ep_; 
-    EchoServer loop(argv[1],atoi(argv[2]),3,3);
+    //closeioandsignal();
+    struct sigaction sa;
 
+    // 设置SIGINT的信号处理函数
+    sa.sa_handler = stop;
+    sigemptyset(&sa.sa_mask); // 清空信号掩码
+    sa.sa_flags = 0;          // 不设置特殊标志
 
+    if (sigaction(SIGINT, &sa, NULL) == -1) {
+        perror("sigaction for SIGINT failed");
+        exit(EXIT_FAILURE);
+    }
+
+    // 设置SIGTERM的信号处理函数
+    if (sigaction(SIGTERM, &sa, NULL) == -1) {
+        perror("sigaction for SIGTERM failed");
+        exit(EXIT_FAILURE);
+    }
     
-    loop.Start();
+    //Epoll ep_; 
+    
+
+    loop=new EchoServer(argv[1],atoi(argv[2]),3,3);
+    loop->Start();
     // Socket fd(socket(AF_INET, SOCK_STREAM, 0));
     // NetAddress addr(argv[1],atoi(argv[2]));
     // fd.setreuseport(1);

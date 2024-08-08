@@ -30,8 +30,9 @@ int setup_timerfd(int seconds=30) {
 
 Eventloop::Eventloop(int timeout,int conntimeout):ep_(new Epoll()),timeout_(timeout),timeoutfd_(setup_timerfd(timeout)),threadid_(std::this_thread::get_id()),efd_(eventfd(0, EFD_NONBLOCK)), efdch_(new channel(this,efd_)),
                                     timeoutfdch_(new channel(this,timeoutfd_)),
-                                    conntimeout_(conntimeout)
+                                    conntimeout_(conntimeout),stop_(false)
 {
+    //closeioandsignal();
     efdch_->SetReadConnect(std::bind(&Eventloop::TaskSend,this));
     efdch_->StartReading();
     timeoutfdch_->SetReadConnect(std::bind(&Eventloop::TimeouEvent,this));
@@ -44,8 +45,8 @@ Eventloop::~Eventloop()
 
 void Eventloop::run()
 { 
-    std::vector<std::weak_ptr<channel>> ev ;
-    while (true) 
+    std::vector<std::weak_ptr<channel>> ev;
+    while (stop_==false) 
     {
         ev = std::move(ep_->loop());
         for(auto &a:ev)
@@ -77,6 +78,9 @@ void Eventloop::Addtask(std::function<void()> task)
         perror("eventfd_write");
     }
 }
+
+
+
 void Eventloop::TaskSend()
 {
     uint64_t val;
@@ -88,7 +92,6 @@ void Eventloop::TaskSend()
         task=task_.front();task_.pop();
         task();
     }
-
 }
 void Eventloop::TimeouEvent()
 {
@@ -139,7 +142,18 @@ int Eventloop::CloseConnection(spConnection clientfd)
     // 返回被删除项的键
     return it->first;
 }
-
+void Eventloop::stop()
+{
+    stop_=true;
+    if (eventfd_write(efd_, 1) == -1) 
+    {
+        perror("eventfd_write");
+        if (eventfd_write(efd_, 1) == -1) 
+        {
+            perror("eventfd_write");
+        }
+    }
+}
 void Eventloop::setclosecallback(std::function<int(spConnection)> closecallback)
 {
     closecallback_=closecallback;

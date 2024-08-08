@@ -44,6 +44,11 @@ void EchoServer::onmessage(spConnection clientfd,std::string buff)
     //std::this_thread::sleep_for(std::chrono::seconds(1)); 
 }
 
+void EchoServer::Stop()
+{
+    server_.stop();
+    JobThread_.stop();
+}
 EchoServer::~EchoServer()
 {
 

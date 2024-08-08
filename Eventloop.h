@@ -11,6 +11,7 @@
 #include<functional>
 #include <sys/timerfd.h>
 #include <sys/time.h>
+#include<atomic>
 class Epoll;
 class channel;
 class Connection;
@@ -30,11 +31,14 @@ private:
     int timeoutfd_;
     std::shared_ptr<channel>timeoutfdch_;
     std::function<int(spConnection)> closecallback_;
+    std::atomic_bool stop_;
 public:
     Eventloop(int timeout=30,int conntimeout=60);
     ~Eventloop();
 
     void run();
+
+    void stop();
 
     bool CurrentLoop();
 

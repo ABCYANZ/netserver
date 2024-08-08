@@ -9,7 +9,7 @@
 class Tcpserver
 {
 private:
-    Eventloop loop_;
+    std::unique_ptr<Eventloop> loop_;
     ThreadPools ThreadPools_;
     std::vector<std::unique_ptr<Eventloop>> loops_;
     std::unique_ptr<Acceptor> sockfd_;
@@ -26,6 +26,8 @@ public:
     ~Tcpserver();
 
     void start();
+    void stop();
+    
 
     void AddConnetion(std::unique_ptr<Socket> clientfd);
 

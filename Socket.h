@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <fcntl.h>
+void closeioandsignal(bool bcloseio=false);
 int Nonblocking();
 class Socket
 {

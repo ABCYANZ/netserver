@@ -1,7 +1,21 @@
 #include"Socket.h"
 #include <unistd.h>
 #include <string.h>
+#include<signal.h>
+// 忽略关闭全部的信号、关闭全部的IO，缺省只忽略信号，不关IO。 
+// 不希望后台服务程序被信号打扰，需要什么信号可以在程序中设置。
+// 实际上关闭的IO是0、1、2。
+void closeioandsignal(bool bcloseio)
+{
+    int ii=0;
 
+    for (ii=0;ii<64;ii++)
+    {
+        if (bcloseio==true) close(ii);
+
+        signal(ii,SIG_IGN); 
+    }
+}
     Socket::Socket(int fd):fd_(fd)
     {
 
@@ -108,3 +122,4 @@
         }
         return fd;
     }
+    

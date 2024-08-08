@@ -1,7 +1,7 @@
 #include"Tcpserver.h"
 
 
-Tcpserver::Tcpserver(const std::string&ip,uint16_t port,int threadsize):sockfd_(new Acceptor(&loop_,ip,port)),ThreadPools_(threadsize),loop_(10)
+Tcpserver::Tcpserver(const std::string&ip,uint16_t port,int threadsize):sockfd_(new Acceptor(loop_.get(),ip,port)),ThreadPools_(threadsize),loop_(new Eventloop(10))
 {
     sockfd_->SetConnectionManage(std::bind(&Tcpserver::AddConnetion,this, std::placeholders::_1));
     for(int i=0;i<threadsize;i++)
@@ -18,8 +18,15 @@ Tcpserver::~Tcpserver()
 
 void Tcpserver::start()
 {
-    loop_.run();
+    loop_->run();
     return ;
+}
+void Tcpserver::stop()
+{
+    loop_->stop();
+    for(auto &a:loops_)
+    a->stop();
+    ThreadPools_.stop();
 }
 void Tcpserver::AddConnetion(std::unique_ptr<Socket> clientfd)
 {

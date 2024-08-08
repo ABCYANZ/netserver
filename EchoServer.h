@@ -11,7 +11,7 @@ public:
 
     void Start();
 
-    //void Stop();
+    void Stop();
 
     void EchoClose(spConnection ction);
     void EchoMessage(spConnection ction,std::string buff);
