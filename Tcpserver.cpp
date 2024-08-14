@@ -1,12 +1,12 @@
 #include"Tcpserver.h"
 
 
-Tcpserver::Tcpserver(const std::string&ip,uint16_t port,int threadsize):sockfd_(new Acceptor(loop_.get(),ip,port)),ThreadPools_(threadsize),loop_(new Eventloop(10))
+Tcpserver::Tcpserver(const std::string&ip,uint16_t port,int threadsize):sockfd_(new Acceptor(loop_.get(),ip,port)),ThreadPools_(threadsize,"IO"),loop_(new Eventloop(true))
 {
     sockfd_->SetConnectionManage(std::bind(&Tcpserver::AddConnetion,this, std::placeholders::_1));
     for(int i=0;i<threadsize;i++)
     {
-        loops_.emplace_back(new Eventloop());
+        loops_.emplace_back(new Eventloop(false));
         ThreadPools_.AddTask(std::bind(&Eventloop::run,loops_[i].get()));
         loops_[i]->setclosecallback(std::bind(&Tcpserver::CloseConnection,this, std::placeholders::_1));
     }
@@ -28,10 +28,10 @@ void Tcpserver::stop()
     a->stop();
     ThreadPools_.stop();
 }
-void Tcpserver::AddConnetion(std::unique_ptr<Socket> clientfd)
+void Tcpserver::AddConnetion(Socket* clientfd)
 {
     int fd = clientfd->fd();
-    spConnection con(new Connection(loops_[fd%loops_.size()].get(), move(clientfd)));
+    spConnection con(new Connection(loops_[fd%loops_.size()].get(), clientfd));
     
     loops_[fd%loops_.size()]->AddConnection(con);
     conn_[fd] = con;
@@ -39,6 +39,8 @@ void Tcpserver::AddConnetion(std::unique_ptr<Socket> clientfd)
     // 设置回调
     conn_[fd]->setclosecallback(std::bind(&Tcpserver::CloseConnection,this, std::placeholders::_1));
     conn_[fd]->setonmessagcallback(std::bind(&Tcpserver::onmessage,this, std::placeholders::_1,std::placeholders::_2));
+    conn_[fd]->setsendcallback(std::bind(&Tcpserver::WriteCallbac,this, std::placeholders::_1));
+    conn_[fd]->seterrorcallback(std::bind(&Tcpserver::ErrorConnection,this, std::placeholders::_1));
     if(newConnetioncallback_)
     newConnetioncallback_(conn_[fd]);
     
@@ -55,7 +57,7 @@ int Tcpserver::CloseConnection(spConnection clientfd)
     
 }
 void Tcpserver::onmessage(spConnection clientfd,std::string buff)
-{
+{ //std::cout<<"onmessage\n";
     readcallback_(clientfd,buff);
     //std::this_thread::sleep_for(std::chrono::seconds(1)); 
 }

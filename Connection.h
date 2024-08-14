@@ -7,32 +7,30 @@
 #include "TimeStamp.h"
 #include<functional>
 #include"Socket.h"
+#include<atomic>
 class channel;
 class Eventloop;
 class Connection;
-//class Buffer;
+class Buffer;
 using spConnection=std::shared_ptr<Connection>;
 class Connection: public std::enable_shared_from_this<Connection>
 {
 private:
-    std::shared_ptr<channel>ch_;//一个Connection对应一个channel
+    std::unique_ptr<channel> ch_;//一个Connection对应一个channel
     Eventloop*loop_;//监听socket的事件循环,在构造函数中传入
     Buffer rbuff_;//接收缓冲区
     Buffer wbuff_;//发送缓冲区
     TimeStamp Stamp_;//记录客户端的活跃时间
     int timeout_;//客户端的超时时间,单位秒
     std::unique_ptr<Socket>clientfd_;//
+    std::atomic_bool stop_;
 
-    int CloseConnection(spConnection clientfd);
-    void onmessage(spConnection clientfd,std::string buff);
-    void WriteCallbac(spConnection clientfd);
-    void ErrorConnection(spConnection clientfd);
     std::function<void(spConnection)> closecallback_;//关闭客户端的回调,回调Tcpserver中的CloseConnection(spConnection clientfd);
     std::function<void(spConnection,std::string)> onmessagcallback_;//读报文的回调,回调Tcpserver中的onmessage(spConnection clientfd);
     std::function<void(spConnection)> sendcallback_;//回应报文的回调的回调,回调Tcpserver中的WriteCallbac(spConnection clientfd);
     std::function<void(spConnection)> errorcallback_;//发生错误的回调,回调Tcpserver中的ErrorConnection(spConnection clientfd);
 public:
-    Connection(Eventloop*loop,std::unique_ptr<Socket>clientfd);
+    Connection(Eventloop*loop,Socket*clientfd);
     ~Connection();
 
     int fd();//返回客户端的socket

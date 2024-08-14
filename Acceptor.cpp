@@ -19,21 +19,22 @@ Acceptor::Acceptor(Eventloop *loop, const std::string&ip, uint16_t port):loop_(l
 Acceptor::~Acceptor()
 {
     //delete ch_;
+    //delete sockfd_;
 }
 
 void Acceptor::newConnection()
 {
     NetAddress addr;
     //Socket* clientfd = new Socket(sockfd_->accept(addr));
-    std::unique_ptr<Socket> clientfd(new Socket(sockfd_->accept(addr)));
+    Socket* clientfd(new Socket(sockfd_->accept(addr)));
     clientfd->setipprot(addr.ip(),addr.port());
     //Connection* ch=new Connection(loop_,clientfd);
-    ConnectionManage_(move(clientfd));
+    ConnectionManage_(clientfd);
     
     return ;
 }
 
-void Acceptor::SetConnectionManage(std::function<void(std::unique_ptr<Socket>)> ConnectionManage)
+void Acceptor::SetConnectionManage(std::function<void(Socket*)> ConnectionManage)
 {
     ConnectionManage_=ConnectionManage;
 }

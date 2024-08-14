@@ -1,6 +1,7 @@
 #pragma once
 #include <string.h>
 #include <string>
+#include <iostream>
 //#include <iostream>
 class Buffer
 {
@@ -9,9 +10,9 @@ private:
 public:
     Buffer();
 
-    void append(const std::string &buff);
+    void append(char *buff,size_t len);
     void HeadAppend(const std::string &buff);
-    bool substr(const std::string &buff);
+    bool substr(std::string &buff);
     void erase(size_t pos,size_t nn);
     const char* data();
     int size();

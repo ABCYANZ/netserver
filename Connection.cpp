@@ -1,21 +1,20 @@
 #include"Connection.h"
 
-Connection::Connection(Eventloop*loop,std::unique_ptr<Socket>clientfd)
+Connection::Connection(Eventloop*loop,Socket*clientfd):ch_(new channel(loop,clientfd->fd())),loop_(loop),clientfd_(clientfd)
 {
-    loop_=loop;
-    ch_=move(std::unique_ptr<channel>(new channel(loop,clientfd->fd())));
-    clientfd_=(move(clientfd));
     
     ch_->Edge();
     ch_->SetReadConnect(std::bind(&Connection::onmessage,this));
-    
+    ch_->SetErrorConnect(std::bind(&Connection::ErrorConnection,this));
     ch_->SetColseConnect(std::bind(&Connection::CloseConnection,this));
     ch_->SetSendConnect(std::bind(&Connection::WriteCallback,this));
     ch_->StartReading();
 }
 Connection::~Connection()
 {
-    std::cout<<"释放connection\n";
+    //delete clientfd_;delete ch_;
+    std::cout<<"Connection id="<<std::this_thread::get_id()<<"\n";
+    std::cout<<"释放connection fd="<<fd() <<"\n";
 }
 void Connection::onmessage()
 {
@@ -23,17 +22,22 @@ void Connection::onmessage()
     char buffer[1024] = {0};
     while(1)
     {
+        //std::cout<<"connection\n";
         ssize_t bytes_read = read(fd(), buffer, 1024);
+        
         if (bytes_read >0) 
         {
-            rbuff_.append(buffer);
+            rbuff_.append(buffer,bytes_read);
+            std::string str;
+            while(true)
+            {
+                if(!rbuff_.substr(str))break;
+                if(onmessagcallback_)
+                onmessagcallback_(shared_from_this(),str);
+            }
         }
         else if(bytes_read==-1&&(errno==EAGAIN || errno==EWOULDBLOCK))
-        {
-            rbuff_.substr(buffer);
-            if(onmessagcallback_)
-            onmessagcallback_(shared_from_this(),buffer);
-           
+        {           
             break;
         }
         else if(bytes_read==-1&&errno==EINTR)
@@ -42,7 +46,7 @@ void Connection::onmessage()
         }
         else if(bytes_read==0)
         {
-            closecallback_(shared_from_this());
+            CloseConnection();
             break;
         }
   
@@ -50,6 +54,7 @@ void Connection::onmessage()
 }
 void Connection::send(const std::string buff)
 {
+    if(stop_==true)return;
     if(loop_->CurrentLoop())
     {
         sendLoop(buff);
@@ -62,8 +67,18 @@ void Connection::send(const std::string buff)
 }
 void Connection::sendLoop(const std::string buff)
 {
+    if(stop_==true){std::cout<<"ptr bu持有资源fd="<<fd()<<"\n";return;}
     Stamp_.updateStamp();
     wbuff_.HeadAppend(buff);
+     //channel*ch=ch_ .get();
+    // if (ch!= nullptr) {  
+    //     std::cout<<"ptr 持有资源::"<<ch<<"\n";  
+    // } 
+    // else 
+    // {  
+    //     //std::cout<<shared_from_this().use_count()<<"\n";
+    //     std::cout<<"ptr bu持有资源fd="<<fd()<<"\n";   
+    // }
     ch_->Enablewriting();
 }
 void Connection::WriteCallback()
@@ -77,11 +92,12 @@ void Connection::WriteCallback()
     if(wbuff_.size()==0)
     {   
         ch_->CloseWrite(); 
-        //sendcallback_(shared_from_this());
+        sendcallback_(shared_from_this());
     }
 }
 void Connection::ErrorConnection()
 {
+    stop_=true;
     errorcallback_(shared_from_this());
 }
 int Connection::fd()
@@ -95,9 +111,8 @@ void Connection::setclosecallback(std::function<void(spConnection)> closecallbac
 }
 void Connection::CloseConnection()
 {
-    std::cout<<"9\n";
+    stop_=true;
     closecallback_(shared_from_this());
-    std::cout<<"8\n";
 }
 
 void Connection::setonmessagcallback(std::function<void(spConnection,std::string)> onmessagcallback)

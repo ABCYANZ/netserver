@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <string.h>
 #include<signal.h>
+#include <iostream>
 // 忽略关闭全部的信号、关闭全部的IO，缺省只忽略信号，不关IO。 
 // 不希望后台服务程序被信号打扰，需要什么信号可以在程序中设置。
 // 实际上关闭的IO是0、1、2。
@@ -22,6 +23,7 @@ void closeioandsignal(bool bcloseio)
     }
     Socket::~Socket()
     {
+     std::cout<<"socket释放 fd="<<fd_<<"\n";
        close(fd_);
     }
     int Socket::fd() const

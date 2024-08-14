@@ -4,7 +4,7 @@
 #include<functional>
 #include <memory>
 class Eventloop;
-class channel:public std::enable_shared_from_this<channel>
+class channel
 {
 private:
     Eventloop *loop_;//从构造函数中传入一个channel

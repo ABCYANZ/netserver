@@ -44,7 +44,7 @@ int main(int argc,char*argv[]) {
     //Epoll ep_; 
     
 
-    loop=new EchoServer(argv[1],atoi(argv[2]),3,3);
+    loop=new EchoServer(argv[1],atoi(argv[2]),5,0);
     loop->Start();
     // Socket fd(socket(AF_INET, SOCK_STREAM, 0));
     // NetAddress addr(argv[1],atoi(argv[2]));

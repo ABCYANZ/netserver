@@ -18,7 +18,7 @@ class Connection;
 using spConnection=std::shared_ptr<Connection>;
 class Eventloop {
 private:
-    std::unique_ptr<Epoll> ep_;  // 使用 Epoll 类的一个实例
+    Epoll* ep_;  // 使用 Epoll 类的一个实例
     std::mutex connmu_;//保护conn_队列
     std::map<int,spConnection> conn_;//事件循环中的客户端
     int timeout_;//定时器的周期,清理客户端
@@ -27,13 +27,14 @@ private:
     std::mutex mu_;//包含task_队列
     std::queue<std::function<void()>> task_;
     int efd_;//eventfd,唤醒事件循环,执行TaskSend函数
-    std::shared_ptr<channel>efdch_;//与efd_对应的channel对象
+    channel*efdch_;//与efd_对应的channel对象
     int timeoutfd_;//定时器的句柄
-    std::shared_ptr<channel>timeoutfdch_;//与定时器的句柄对应的实例
+    channel*timeoutfdch_;//与定时器的句柄对应的实例
     std::function<int(spConnection)> closecallback_;//清理客户端的回调,调用Tcpserver中的CloseConnection(spConnection clientfd);
     std::atomic_bool stop_;//退出事件循环的标志
+    bool loop_;
 public:
-    Eventloop(int timeout=30,int conntimeout=60);
+    Eventloop(bool loop,int timeout=30,int conntimeout=60);
     ~Eventloop();
 
     void run();//事件循环
@@ -42,7 +43,7 @@ public:
 
     bool CurrentLoop();//判断当前线程是否是事件循环所在线程,保护客户端的发生缓冲区
 
-    void UpdateChannel(const std::shared_ptr<channel> &ch);  // 确保 channel 类型被正确声明
+    void UpdateChannel(channel* ch);  // 确保 channel 类型被正确声明
 
     void AddConnection(spConnection conn);//
     void TaskSend();//事件循环被efd_唤醒后执行的函数

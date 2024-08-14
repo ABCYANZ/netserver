@@ -4,7 +4,7 @@
 #include<map>
 #include <memory>
 #include "ThreadPools.h"
-//using spConnection=std::shared_ptr<Connection>;
+using spConnection=std::shared_ptr<Connection>;
 //class Eventloop;
 class Tcpserver
 {
@@ -29,7 +29,7 @@ public:
     void stop();
     
 
-    void AddConnetion(std::unique_ptr<Socket> clientfd);//在Acceptor中回调
+    void AddConnetion(Socket*clientfd);//在Acceptor中回调
 
     int CloseConnection(spConnection clientfd);//在Connection中回调
     void onmessage(spConnection clientfd,std::string buff);//在Connection中回调

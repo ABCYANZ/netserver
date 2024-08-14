@@ -4,9 +4,9 @@ Buffer::Buffer()
 {
 
 }
-void Buffer::append(const std::string &buff)
+void Buffer::append(char *buff,size_t len)
 {
-    buff_.append(buff);
+    buff_.append(buff,len);
 }
 
 void Buffer::HeadAppend(const std::string &buff)
@@ -16,14 +16,14 @@ void Buffer::HeadAppend(const std::string &buff)
     buff_.append(buff);
 }
 
-bool Buffer::substr(const std::string &buff)
+bool Buffer::substr(std::string &buff)
 {
     int len=0;
     if(buff_.size()<4)return false;
     memcpy(&len,buff_.data(),4);
     if(buff_.size()<len+4)return false;
 
-    buff_=buff_.substr(4,len);
+    buff=buff_.substr(4,len);
     buff_.erase(0,4+len);
     return true;
 }

@@ -16,7 +16,8 @@ channel::channel(Eventloop*loop,int fd):loop_(loop),fd_(fd)
 }
 channel::~channel()
 {
-
+    //std::cout<<"channel释放 fd="<<fd_<<"\n";
+    //std::cout<<"channel id="<<std::this_thread::get_id()<<"\n";
 }
 
 int channel::fd()
@@ -51,18 +52,17 @@ void channel::SetInepoll(bool inepoll)
 }
 void channel::Handleevent()
 {
-
     if(revents_&EPOLLHUP)
     {
         closecallback_();
     }
-    else if(revents_&(EPOLLIN|EPOLLPRI))
-    {
-        readcallback_();
-    }
     else if(revents_&EPOLLOUT)
     {
         sendcallback_();
+    }
+    else if(revents_&(EPOLLIN|EPOLLPRI))
+    {
+        readcallback_();
     }
     else
     {
@@ -91,30 +91,31 @@ void channel::Handleevent()
 
 void channel::StartReading()
 {
+    //std::cout<<"startreading\n";
     events_|=EPOLLIN;
-    shared_from_this();
-    loop_->UpdateChannel(shared_from_this());
+    loop_->UpdateChannel(this);
 }
 void channel::Enablewriting()
 {
+    //std::cout<<"enablewritin fd"<<fd()<<"\n";
     events_|=EPOLLOUT;
-    loop_->UpdateChannel(shared_from_this());
+    loop_->UpdateChannel(this);
 }
 
 void channel::StopReading()
 {
     events_&=~EPOLLIN;
-    loop_->UpdateChannel(shared_from_this());
+    loop_->UpdateChannel(this);
 }
 void channel::CloseWrite()
 {
     events_&=~EPOLLOUT;
-    loop_->UpdateChannel(shared_from_this());
+    loop_->UpdateChannel(this);
 }
 void channel::CancelAll()
 {   
     events_=0;
-    loop_->UpdateChannel(shared_from_this());
+    loop_->UpdateChannel(this);
 }
 void channel::Edge()
 {

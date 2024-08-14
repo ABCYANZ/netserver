@@ -7,7 +7,8 @@
 #include <mutex>
 #include <condition_variable>
 #include <atomic>
-
+#include <unistd.h>
+#include <iostream>
 class ThreadPools
 {
 private:
@@ -16,8 +17,10 @@ private:
     std::mutex mu_;//保护任务队列
     std::condition_variable condition_;//条件变量
     std::atomic_bool stop_;
+    std::atomic_int64_t tasksize_;
+    const std::string threadtype_;                                 // 线程种类："IO"、"WORKS"
 public:
-    ThreadPools(int threadsize);
+ThreadPools(int threadsize,const std::string threadtype);
     ~ThreadPools();
 
     void AddTask(std::function<void()> task);

@@ -28,42 +28,48 @@ int setup_timerfd(int seconds=30) {
     return timer_fd;
 }
 
-Eventloop::Eventloop(int timeout,int conntimeout):ep_(new Epoll()),timeout_(timeout),timeoutfd_(setup_timerfd(timeout)),threadid_(std::this_thread::get_id()),efd_(eventfd(0, EFD_NONBLOCK)), efdch_(new channel(this,efd_)),
+Eventloop::Eventloop(bool loop,int timeout,int conntimeout):ep_(new Epoll()),timeout_(timeout),timeoutfd_(setup_timerfd(timeout)),efd_(eventfd(0, EFD_NONBLOCK)), efdch_(new channel(this,efd_)),
                                     timeoutfdch_(new channel(this,timeoutfd_)),
-                                    conntimeout_(conntimeout),stop_(false)
+                                    conntimeout_(conntimeout),stop_(false),loop_(loop)
 {
     //closeioandsignal();
-    efdch_->SetReadConnect(std::bind(&Eventloop::TaskSend,this));
-    efdch_->StartReading();
-    timeoutfdch_->SetReadConnect(std::bind(&Eventloop::TimeouEvent,this));
-    timeoutfdch_->StartReading();
+    if(!loop_)
+    {
+        efdch_->SetReadConnect(std::bind(&Eventloop::TaskSend,this));
+        efdch_->StartReading();
+        timeoutfdch_->SetReadConnect(std::bind(&Eventloop::TimeouEvent,this));
+        timeoutfdch_->StartReading();
+    }
+
 }
 Eventloop::~Eventloop()
 {
-
+    //delete ep_;
 }
 
 void Eventloop::run()
 { 
-    std::vector<std::weak_ptr<channel>> ev;
+    threadid_=std::this_thread::get_id();
+    std::vector<channel*> ev;
     while (stop_==false) 
     {
         ev = std::move(ep_->loop());
         for(auto &a:ev)
-        {
-            
-            if(a.expired())continue;
- 
-            if(a.lock()->fd()==efd_)
+        {    
+            if(a->fd()==efd_)
             {
                 TaskSend();continue;
             }
+            if(a->fd()==timeoutfd_)
+            {
+                TimeouEvent();continue;
+            }
 
-            a.lock()->Handleevent();
+            a->Handleevent();
         }
     }
 }
-void Eventloop::UpdateChannel(const std::shared_ptr<channel>&ch)
+void Eventloop::UpdateChannel(channel* ch)
 {
     ep_->UpdateChannel(ch);
 }
@@ -75,7 +81,7 @@ void Eventloop::AddConnection(spConnection conn)
 }
 bool Eventloop::CurrentLoop()
 {
-    return threadid_==std::this_thread::get_id();
+    return (threadid_==std::this_thread::get_id());
 }
 void Eventloop::Addtask(std::function<void()> task)
 {
@@ -96,7 +102,7 @@ void Eventloop::TaskSend()
     std::function<void()> task;
     while(!task_.empty())
     {
-        task=task_.front();task_.pop();
+        task=task_.front();task_.pop(); 
         task();
     }
 }
@@ -123,10 +129,10 @@ void Eventloop::TimeouEvent()
             //CloseConnection(i->second);
             if(i==-1)break;
             it = conn_.find(i);
+            std::cout<<" 杀一个\n";
         }
         else it++;
     }
-
 }
 
 int Eventloop::CloseConnection(spConnection clientfd)

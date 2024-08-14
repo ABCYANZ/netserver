@@ -14,8 +14,8 @@ public:
     Epoll();
     ~Epoll();
 
-    std::vector<std::weak_ptr<channel>> loop();//事件循环
+    std::vector<channel*> loop();//事件循环
 
-    void UpdateChannel(const std::shared_ptr<channel> &ch);//将channel加入到epoll中
+    void UpdateChannel(channel* ch);//将channel加入到epoll中
 
 };
