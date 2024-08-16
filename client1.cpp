@@ -8,114 +8,71 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <fcntl.h>
-int Nonblocking()
+int main(int argc, char *argv[])
+{
+    if (argc != 3)
     {
-        int fd=socket(AF_INET, SOCK_STREAM, 0);
-        if (fd == -1) 
-        {
-        
-            perror("Socket creation failed");
-            return 1;
-        }
-    
-        int flags = fcntl(fd, F_GETFL, 0);
-        if (flags == -1) 
-        {
-            perror("Failed to get socket flags");
-            return 1;
-        }
-    
-        flags |= O_NONBLOCK;
-        if (fcntl(fd, F_SETFL, flags) == -1) 
-        {
-            perror("Failed to set socket to non-blocking");
-            return 1;
-        }
-        return fd;
-    }
-const char* SERVER_IP = "127.0.0.1";
-const int PORT = 8080;
-
-int main() {
-    int client_socket = Nonblocking();
-    if (client_socket < 0) {
-        std::cerr << "Failed to create socket" << std::endl;
+        printf("usage:./client ip port\n"); 
+        printf("example:./client 127.0.0.1 8080\n\n"); 
         return -1;
     }
 
-    struct sockaddr_in server_address;
-    server_address.sin_family = AF_INET;
-    server_address.sin_port = htons(PORT);
-    inet_pton(AF_INET, SERVER_IP, &server_address.sin_addr);
-    connect(client_socket, (struct sockaddr *)&server_address, sizeof(server_address));
-    // if (connect(client_socket, (struct sockaddr *)&server_address, sizeof(server_address)) < 0) {
-    //     std::cerr << "Connect failed" << std::endl;
-    //     close(client_socket);
-    //     return -1;
-    // }
-    sleep(1);
-    int z=0;
-    for(int i=0,len=0;i<10000;i++)
+    int sockfd;
+    struct sockaddr_in servaddr;
+    char buf[1024];
+ 
+    if ((sockfd=socket(AF_INET,SOCK_STREAM,0))<0) { printf("socket() failed.\n"); return -1; }
+    
+    memset(&servaddr,0,sizeof(servaddr));
+    servaddr.sin_family=AF_INET;
+    servaddr.sin_port=htons(atoi(argv[2]));
+    servaddr.sin_addr.s_addr=inet_addr(argv[1]);
+
+    if (connect(sockfd, (struct sockaddr *)&servaddr,sizeof(servaddr)) != 0)
     {
-        const char* message = "Hello, Server!";
-        len=strlen(message);
-        if (send(client_socket, &len, sizeof(len), 0) < 0) {
-            std::cerr << "Send failed" << std::endl;
-            close(client_socket);
-            return -1;
-        }
-        if (send(client_socket, message, strlen(message), 0) < 0) {
-            std::cerr << "Send failed" << std::endl;
-            close(client_socket);
-            return -1;
-        }
-        z++;int n=0;
-        char buffer[1024] = {0};std::string str;
-        while (z>0)
-        {
-            
-            ssize_t bytes_received1 = recv(client_socket, &len, 4, 0);
-            if(bytes_received1==-1)continue;
-            while(1)
-            {
-                ssize_t bytes_received = recv(client_socket, buffer, len, 0);
-                if (bytes_received <= 0) {
-                    std::cerr << "Receive failed" << std::endl;
-                } 
-                else if(bytes_received>0)
-                {
-                    n+=bytes_received;
-                    str.append(buffer,bytes_received);
-                }
-                if(n==len) {
-                    std::cout << "Received: " << str<< std::endl;z--;n=0;break;
-                }
-            }
-        } 
+        printf("connect(%s:%s) failed.\n",argv[1],argv[2]); close(sockfd);  return -1;
     }
-    int len=0;char buffer[1024] = {0};int n=0;std::string str;
-        while (z>0)
-        {
-            
-            ssize_t bytes_received1 = recv(client_socket, &len, 4, 0);
-            if(bytes_received1==-1)continue;
-            while(1)
-            {
-                ssize_t bytes_received = recv(client_socket, buffer, len, 0);
-                if (bytes_received <= 0) {
-                    std::cerr << "Receive failed" << std::endl;
-                } 
-                else if(bytes_received>0)
-                {
-                    n+=bytes_received;
-                    str.append(buffer,bytes_received);
-                }
-                if(n==len) {
-                    std::cout << "Received: " << str<< std::endl;z--;n=0;break;
-                }
-            }
-        } 
-   sleep(2); 
-    close(client_socket);
-    return 0;
-}
+
+    printf("connect ok.\n");
+    printf("开始时间：%ld\n",time(0));
+
+    for (int ii=0;ii<100000;ii++)
+    {
+        //printf("recv:%s\n",buf);
+        memset(buf,0,sizeof(buf));
+        sprintf(buf,"Hello, Server!");
+
+        char tmpbuf[1024];                 // 临时的buffer，报文头部+报文内容。
+        memset(tmpbuf,0,sizeof(tmpbuf));
+        int len=strlen(buf);                 // 计算报文的大小。
+        memcpy(tmpbuf,&len,4);       // 拼接报文头部。
+        memcpy(tmpbuf+4,buf,len);  // 拼接报文内容。
+
+        send(sockfd,tmpbuf,len+4,0);  // 把请求报文发送给服务端。
+        
+        recv(sockfd,&len,4,0);            // 先读取4字节的报文头部。
+
+        memset(buf,0,sizeof(buf));
+        recv(sockfd,buf,len,0);           // 读取报文内容。
+
+         //printf("recv:%s\n",buf);
+    }
+    printf("结束时间：%ld\n",time(0));
+
+    /*
+    for (int ii=0;ii<10;ii++)
+    {
+        memset(buf,0,sizeof(buf));
+        sprintf(buf,"这是第%d个超级女生。",ii);
+
+        send(sockfd,buf,strlen(buf),0);  // 把请求报文发送给服务端。
+        
+        memset(buf,0,sizeof(buf));
+        recv(sockfd,buf,1024,0);           // 读取报文内容。
+
+        printf("recv:%s\n",buf);
+sleep(1);
+    }
+    */
+
+} 
