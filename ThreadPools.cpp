@@ -14,17 +14,23 @@ ThreadPools::ThreadPools(int threadsize,const std::string threadtype):stop_(fals
             {
                 {
                     std::unique_lock mu(mu_);
+                    condition_.wait(mu,[this]{
+                        return (task_.empty()==false||stop_==true);
+                    });
 
-                    while(true)
-                    {
-                        condition_.wait(mu);
-                        if(task_.size()>0)
-                        {   
-                            task=std::move(task_.front());task_.pop();
-                           break;
-                        }
-                        if(stop_==true)return;
-                    }
+                    if(task_.empty()==true&&stop_==true)return;
+                    task=std::move(task_.front());task_.pop();
+
+                    // while(true)
+                    // {
+                    //     condition_.wait(mu);
+                    //     if(task_.size()>0)
+                    //     {   
+                    //         task=std::move(task_.front());task_.pop();
+                    //        break;
+                    //     }
+                    //     if(stop_==true)return;
+                    // }
                 }
                 tasksize_--;
                 task();

@@ -31,7 +31,7 @@ public:
 
     void AddConnetion(Socket*clientfd);//在Acceptor中回调
 
-    int CloseConnection(spConnection clientfd);//在Connection中回调
+    void CloseConnection(spConnection clientfd);//在Connection中回调
     void onmessage(spConnection clientfd,std::string buff);//在Connection中回调
     void WriteCallbac(spConnection clientfd);//在Connection中回调
     void ErrorConnection(spConnection clientfd);//在Connection中回调

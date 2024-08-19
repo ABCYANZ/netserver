@@ -46,13 +46,12 @@ void Tcpserver::AddConnetion(Socket* clientfd)
     
 }
 
-int Tcpserver::CloseConnection(spConnection clientfd)
+void Tcpserver::CloseConnection(spConnection clientfd)
 {
     std::unique_lock connmu(mu_);
     conn_.erase(clientfd->fd());
     if(closecallback_)
     closecallback_(clientfd);
-    return loops_[clientfd->fd()%loops_.size()]->CloseConnection(clientfd);
     //delete clientfd;
     
 }

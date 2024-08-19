@@ -30,7 +30,7 @@ private:
     channel*efdch_;//与efd_对应的channel对象
     int timeoutfd_;//定时器的句柄
     channel*timeoutfdch_;//与定时器的句柄对应的实例
-    std::function<int(spConnection)> closecallback_;//清理客户端的回调,调用Tcpserver中的CloseConnection(spConnection clientfd);
+    std::function<void(spConnection)> closecallback_;//清理客户端的回调,调用Tcpserver中的CloseConnection(spConnection clientfd);
     std::atomic_bool stop_;//退出事件循环的标志
     bool loop_;
 public:
@@ -50,7 +50,6 @@ public:
     void Addtask(std::function<void()> task);//将任务添加到task_队列中
     
     void TimeouEvent();//定时器唤醒后执行的函数,清理超时客户端
-    int CloseConnection(spConnection clientfd);//在conn_删除客户端,在Tcpserver中调用
 
-    void setclosecallback(std::function<int(spConnection)> closecallback);
+    void setclosecallback(std::function<void(spConnection)> closecallback);
 };

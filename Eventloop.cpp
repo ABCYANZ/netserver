@@ -123,38 +123,14 @@ void Eventloop::TimeouEvent()
     {
         if(it->second->Timeout(timeout_))
         {
-            int i=closecallback_(it->second);
-            // std::unique_lock connmu(connmu_);
-            // it=conn_.erase(i);
-            //CloseConnection(i->second);
-            if(i==-1)break;
-            it = conn_.find(i);
-            std::cout<<" 杀一个\n";
+            closecallback_(it->second);
+            std::unique_lock connmu(connmu_);
+            it=conn_.erase(it);
         }
         else it++;
     }
 }
 
-int Eventloop::CloseConnection(spConnection clientfd)
-{
-    std::unique_lock<std::mutex> lock(connmu_);
-
-    auto i = conn_.find(clientfd->fd());
-    if (i == conn_.end()) {
-        return -1;
-    }
-
-    // 删除连接
-    auto it = conn_.erase(i);
-
-    // 如果删除的是最后一个元素，返回-1
-    if (it == conn_.end()) {
-        return -1;
-    }
-
-    // 返回被删除项的键
-    return it->first;
-}
 void Eventloop::stop()
 {
     stop_=true;
@@ -167,7 +143,7 @@ void Eventloop::stop()
         }
     }
 }
-void Eventloop::setclosecallback(std::function<int(spConnection)> closecallback)
+void Eventloop::setclosecallback(std::function<void(spConnection)> closecallback)
 {
     closecallback_=closecallback;
 }

@@ -13,8 +13,7 @@ Connection::Connection(Eventloop*loop,Socket*clientfd):ch_(new channel(loop,clie
 Connection::~Connection()
 {
     //delete clientfd_;delete ch_;
-    std::cout<<"Connection id="<<std::this_thread::get_id()<<"\n";
-    std::cout<<"释放connection fd="<<fd() <<"\n";
+    //std::cout<<"connection ip="<< <<"\n";
 }
 void Connection::onmessage()
 {
@@ -22,7 +21,6 @@ void Connection::onmessage()
     char buffer[1024] = {0};
     while(1)
     {
-        //std::cout<<"connection\n";
         ssize_t bytes_read = read(fd(), buffer, 1024);
         
         if (bytes_read >0) 
@@ -67,18 +65,10 @@ void Connection::send(const std::string buff)
 }
 void Connection::sendLoop(const std::string buff)
 {
-    if(stop_==true){std::cout<<"ptr bu持有资源fd="<<fd()<<"\n";return;}
+    if(stop_==true)return;
     Stamp_.updateStamp();
     wbuff_.HeadAppend(buff);
-     //channel*ch=ch_ .get();
-    // if (ch!= nullptr) {  
-    //     std::cout<<"ptr 持有资源::"<<ch<<"\n";  
-    // } 
-    // else 
-    // {  
-    //     //std::cout<<shared_from_this().use_count()<<"\n";
-    //     std::cout<<"ptr bu持有资源fd="<<fd()<<"\n";   
-    // }
+    
     ch_->Enablewriting();
 }
 void Connection::WriteCallback()

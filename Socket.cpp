@@ -23,7 +23,6 @@ void closeioandsignal(bool bcloseio)
     }
     Socket::~Socket()
     {
-     std::cout<<"socket释放 fd="<<fd_<<"\n";
        close(fd_);
     }
     int Socket::fd() const

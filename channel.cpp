@@ -91,13 +91,11 @@ void channel::Handleevent()
 
 void channel::StartReading()
 {
-    //std::cout<<"startreading\n";
     events_|=EPOLLIN;
     loop_->UpdateChannel(this);
 }
 void channel::Enablewriting()
 {
-    //std::cout<<"enablewritin fd"<<fd()<<"\n";
     events_|=EPOLLOUT;
     loop_->UpdateChannel(this);
 }

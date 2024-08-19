@@ -16,7 +16,7 @@ void EchoServer::Start()
 
 void EchoServer::EchoClose(spConnection ction)
 {
-
+   //
 }
 void EchoServer::EchoMessage(spConnection ction,std::string buff)
 {

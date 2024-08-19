@@ -22,6 +22,11 @@ void stop(int sig)
 }
 int main(int argc,char*argv[]) {
 
+if(argc<3)
+{
+    printf("./server1 127.0.0.1 8080");
+    return -1;
+}
     //closeioandsignal();
     struct sigaction sa;
 
@@ -44,7 +49,7 @@ int main(int argc,char*argv[]) {
     //Epoll ep_; 
     
 
-    loop=new EchoServer(argv[1],atoi(argv[2]),5,0);
+    loop=new EchoServer(argv[1],atoi(argv[2]),10,0);
     loop->Start();
     // Socket fd(socket(AF_INET, SOCK_STREAM, 0));
     // NetAddress addr(argv[1],atoi(argv[2]));
